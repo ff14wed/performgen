@@ -46,22 +46,26 @@ var noteMappings = map[string]int{
 // Modifiers can be one of:
 // `+` or `#` - Makes this note a sharp note
 // `-` - Makes this note a flat note
-// Length is the denominator of 1/x, where the note will be spaced from then
+// Length is the denominator of 1/x, where the note will be spaced from the
 // next note by 1/x of a beat.
 // If length is -1 (empty length code), the default length will be used.
 // If length is 0 (explicit length code of 0), the length will be set to a
 // very small value (20 milliseconds).
+// If an octave was not specified previously, it will default to octave 3
 func (s *State) EmitNote(note string, modifier string, length int) error {
-	shift := (s.Octave + 1) * 12
+	shift := (s.CurrentOctave() - 2) * 12
 	noteMap, ok := noteMappings[strings.ToUpper(note)]
 	if !ok {
-		return fmt.Errorf("invalid note: %s", note)
+		return fmt.Errorf("invalid note: %s%s", note, modifier)
 	}
 	pos := byte(noteMap + shift)
 	if modifier == "#" || modifier == "+" {
 		pos++
 	} else if modifier == "-" {
 		pos--
+	}
+	if pos < 1 || pos > 37 {
+		return fmt.Errorf("invalid note: %s%s at octave %d", note, modifier, s.CurrentOctave())
 	}
 	s.Sequence = append(s.Sequence, encoding.Note(pos))
 	return s.EmitRest(length)
@@ -115,8 +119,8 @@ func (s *State) SetDefaultLength(l int) error {
 
 // SetOctave sets the octave on the state
 func (s *State) SetOctave(o int) error {
-	if o < -1 || o > 2 {
-		return errors.New("cannot set octave to anything other than -1, 0, 1, or 2")
+	if o < 2 || o > 5 {
+		return errors.New("cannot set octave to anything other than 2, 3, 4, or 5")
 	}
 	s.Octave = o
 	return nil
@@ -124,6 +128,9 @@ func (s *State) SetOctave(o int) error {
 
 // CurrentOctave returns the current octave on the state
 func (s *State) CurrentOctave() int {
+	if s.Octave == 0 {
+		s.Octave = 3
+	}
 	return s.Octave
 }
 
