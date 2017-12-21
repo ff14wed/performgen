@@ -14,7 +14,7 @@ var _ = Describe("Parser", func() {
 	var input *bytes.Reader
 	Context("with a valid program", func() {
 		BeforeEach(func() {
-			input = bytes.NewReader([]byte("T120 L4 O0 > < Aa1 B# B3 C#4 C+4 C-4 D0d0 R E5. r5. L4."))
+			input = bytes.NewReader([]byte("T120 L4 O0 > < Aa1 B# B3 C#4 \n C+4 C-4 D0d0 R E5. r5. L4."))
 		})
 		It("generates a correct syntax tree and notes have -1 as default length", func() {
 			parser := mml.NewParser(input)
@@ -39,6 +39,26 @@ var _ = Describe("Parser", func() {
 				&mml.NoteCommand{Note: "E", Length: 5, Dot: true},
 				&mml.RestCommand{Length: 5, Dot: true},
 				&mml.LengthCommand{Length: 4, Dot: true},
+			}))
+			Expect(ast.Positions).To(Equal([]mml.Position{
+				{Line: 1, Column: 1},
+				{Line: 1, Column: 6},
+				{Line: 1, Column: 9},
+				{Line: 1, Column: 12},
+				{Line: 1, Column: 14},
+				{Line: 1, Column: 16},
+				{Line: 1, Column: 17},
+				{Line: 1, Column: 20},
+				{Line: 1, Column: 23},
+				{Line: 1, Column: 26},
+				{Line: 2, Column: 2},
+				{Line: 2, Column: 6},
+				{Line: 2, Column: 10},
+				{Line: 2, Column: 12},
+				{Line: 2, Column: 15},
+				{Line: 2, Column: 17},
+				{Line: 2, Column: 21},
+				{Line: 2, Column: 25},
 			}))
 		})
 	})

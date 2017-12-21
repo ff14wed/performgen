@@ -30,6 +30,6 @@ var _ = Describe("Perform Generator", func() {
 	})
 	It("errors when a runtime error has occurred", func() {
 		_, err := performgen.Generate(" ABCDo7")
-		Expect(err).To(MatchError("cannot set octave to anything other than 3, 4, 5, or 6"))
+		Expect(err).To(MatchError("execution error at line 1, column 6: cannot set octave to anything other than 3, 4, 5, or 6"))
 	})
 })
