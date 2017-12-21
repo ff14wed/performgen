@@ -16,7 +16,7 @@ var _ = Describe("State", func() {
 	Describe("EmitNote", func() {
 		DescribeTable("emits the correct note",
 			func(note, modifier string, octave, expectedID int) {
-				s.SetOctave(octave + 3)
+				s.SetOctave(octave + 4)
 				s.EmitNote(note, modifier, 0, false)
 				Expect(s.Sequence).To(ConsistOf(encoding.Note(byte(expectedID)), encoding.Delay(20)))
 			},
@@ -120,8 +120,8 @@ var _ = Describe("State", func() {
 			Expect(s.EmitNote("H", "#", 1, false)).To(MatchError("invalid note: H#"))
 		})
 		It("errors if a given note is out of range", func() {
-			s.SetOctave(5)
-			Expect(s.EmitNote("D", "+", 1, false)).To(MatchError("invalid note: D+ at octave 5"))
+			s.SetOctave(6)
+			Expect(s.EmitNote("D", "+", 1, false)).To(MatchError("invalid note: D+ at octave 6"))
 		})
 	})
 	Describe("EmitRest", func() {
@@ -255,17 +255,17 @@ var _ = Describe("State", func() {
 				Expect(s.SetOctave(octave)).To(Succeed())
 				Expect(s.Octave).To(Equal(octave))
 			},
-			Entry("2", 2),
 			Entry("3", 3),
 			Entry("4", 4),
 			Entry("5", 5),
+			Entry("6", 6),
 		)
 		It("errors if the octave is set to less than 2", func() {
-			Expect(s.SetOctave(1)).To(MatchError("cannot set octave to anything other than 2, 3, 4, or 5"))
+			Expect(s.SetOctave(2)).To(MatchError("cannot set octave to anything other than 3, 4, 5, or 6"))
 			Expect(s.Length).To(Equal(0))
 		})
 		It("errors if the octave is set to greater than 5", func() {
-			Expect(s.SetOctave(6)).To(MatchError("cannot set octave to anything other than 2, 3, 4, or 5"))
+			Expect(s.SetOctave(7)).To(MatchError("cannot set octave to anything other than 3, 4, 5, or 6"))
 			Expect(s.Length).To(Equal(0))
 		})
 	})

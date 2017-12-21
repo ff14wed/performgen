@@ -55,7 +55,7 @@ var noteMappings = map[string]int{
 // very small value (20 milliseconds).
 // If an octave was not specified previously, it will default to octave 3
 func (s *State) EmitNote(note string, modifier string, length int, dot bool) error {
-	shift := (s.CurrentOctave() - 2) * 12
+	shift := (s.CurrentOctave() - 3) * 12
 	noteMap, ok := noteMappings[strings.ToUpper(note)]
 	if !ok {
 		return fmt.Errorf("invalid note: %s%s", note, modifier)
@@ -132,8 +132,8 @@ func (s *State) SetDefaultLength(l int, dot bool) error {
 
 // SetOctave sets the octave on the state
 func (s *State) SetOctave(o int) error {
-	if o < 2 || o > 5 {
-		return errors.New("cannot set octave to anything other than 2, 3, 4, or 5")
+	if o < 3 || o > 6 {
+		return errors.New("cannot set octave to anything other than 3, 4, 5, or 6")
 	}
 	s.Octave = o
 	return nil
@@ -142,7 +142,7 @@ func (s *State) SetOctave(o int) error {
 // CurrentOctave returns the current octave on the state
 func (s *State) CurrentOctave() int {
 	if s.Octave == 0 {
-		s.Octave = 3
+		s.Octave = 4
 	}
 	return s.Octave
 }
