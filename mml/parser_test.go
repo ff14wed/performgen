@@ -49,7 +49,7 @@ var _ = Describe("Parser", func() {
 		It("errors", func() {
 			parser := mml.NewParser(input)
 			_, err := parser.Parse()
-			Expect(err).To(MatchError("Tempo command at line 1 col 5: expected numeric argument"))
+			Expect(err).To(MatchError("Tempo command at line 1, column 5: expected numeric argument"))
 		})
 	})
 	Context("when length command does not have a numeric argument", func() {
@@ -59,7 +59,7 @@ var _ = Describe("Parser", func() {
 		It("errors", func() {
 			parser := mml.NewParser(input)
 			_, err := parser.Parse()
-			Expect(err).To(MatchError("Length command at line 1 col 5: expected numeric argument"))
+			Expect(err).To(MatchError("Length command at line 1, column 5: expected numeric argument"))
 		})
 	})
 	Context("when octave command does not have a numeric argument", func() {
@@ -69,7 +69,7 @@ var _ = Describe("Parser", func() {
 		It("errors", func() {
 			parser := mml.NewParser(input)
 			_, err := parser.Parse()
-			Expect(err).To(MatchError("Octave command at line 1 col 5: expected numeric argument"))
+			Expect(err).To(MatchError("Octave command at line 1, column 5: expected numeric argument"))
 		})
 	})
 	Context("when there is an unrecognized token at the beginning of the input", func() {
@@ -79,7 +79,7 @@ var _ = Describe("Parser", func() {
 		It("errors", func() {
 			parser := mml.NewParser(input)
 			_, err := parser.Parse()
-			Expect(err).To(MatchError("invalid token 'H' at line 1 col 5"))
+			Expect(err).To(MatchError("invalid token 'H' at line 1, column 5"))
 		})
 	})
 	Context("when there is an unrecognized token in middle of the input", func() {
@@ -89,7 +89,7 @@ var _ = Describe("Parser", func() {
 		It("errors", func() {
 			parser := mml.NewParser(input)
 			_, err := parser.Parse()
-			Expect(err).To(MatchError("invalid token 'H' at line 1 col 9"))
+			Expect(err).To(MatchError("invalid token 'H' at line 1, column 9"))
 		})
 	})
 	Context("when there is an unrecognized token after a note modifier", func() {
@@ -99,7 +99,7 @@ var _ = Describe("Parser", func() {
 		It("errors", func() {
 			parser := mml.NewParser(input)
 			_, err := parser.Parse()
-			Expect(err).To(MatchError("invalid token 'H' at line 1 col 10"))
+			Expect(err).To(MatchError("invalid token 'H' at line 1, column 10"))
 		})
 	})
 	Context("when there is an unrecognized token after a note length", func() {
@@ -109,7 +109,7 @@ var _ = Describe("Parser", func() {
 		It("errors", func() {
 			parser := mml.NewParser(input)
 			_, err := parser.Parse()
-			Expect(err).To(MatchError("invalid token 'H' at line 1 col 11"))
+			Expect(err).To(MatchError("invalid token 'H' at line 1, column 11"))
 		})
 	})
 	Context("when there is an unrecognized token after a note dot", func() {
@@ -119,7 +119,7 @@ var _ = Describe("Parser", func() {
 		It("errors", func() {
 			parser := mml.NewParser(input)
 			_, err := parser.Parse()
-			Expect(err).To(MatchError("invalid token 'H' at line 1 col 12"))
+			Expect(err).To(MatchError("invalid token 'H' at line 1, column 12"))
 		})
 	})
 	Context("when there is an unrecognized token after a rest dot", func() {
@@ -129,7 +129,7 @@ var _ = Describe("Parser", func() {
 		It("errors", func() {
 			parser := mml.NewParser(input)
 			_, err := parser.Parse()
-			Expect(err).To(MatchError("invalid token 'H' at line 1 col 10"))
+			Expect(err).To(MatchError("invalid token 'H' at line 1, column 10"))
 		})
 	})
 	Context("when there is an unrecognized token after a length dot", func() {
@@ -139,7 +139,7 @@ var _ = Describe("Parser", func() {
 		It("errors", func() {
 			parser := mml.NewParser(input)
 			_, err := parser.Parse()
-			Expect(err).To(MatchError("invalid token 'H' at line 1 col 11"))
+			Expect(err).To(MatchError("invalid token 'H' at line 1, column 11"))
 		})
 	})
 	Context("when there is a non-command token after a full command specificaiton", func() {
@@ -149,7 +149,7 @@ var _ = Describe("Parser", func() {
 		It("errors", func() {
 			parser := mml.NewParser(input)
 			_, err := parser.Parse()
-			Expect(err).To(MatchError("expected command, got '+' at line 1 col 7"))
+			Expect(err).To(MatchError("expected command, got '+' at line 1, column 7"))
 		})
 	})
 	DescribeTable("errors when a numeric argument is too large",

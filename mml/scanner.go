@@ -27,10 +27,9 @@ const (
 
 // Token defines the type for a lexical token
 type Token struct {
-	typ     TokenType
-	ident   string
-	lineNum int
-	colNum  int
+	typ   TokenType
+	ident string
+	pos   Position
 }
 
 // Type returns the type of the token
@@ -43,16 +42,9 @@ func (t Token) Ident() string {
 	return t.ident
 }
 
-// LineNum returns the line number of the token
-// Internal note: We always add 1 to it since we keep track of it starting
-// at 0.
-func (t Token) LineNum() int {
-	return t.lineNum + 1
-}
-
-// ColNum returns the column number of the token
-func (t Token) ColNum() int {
-	return t.colNum
+// Position returns the position in the input string of the token
+func (t Token) Position() Position {
+	return t.pos
 }
 
 func isWhitespace(ch rune) bool { return ch == ' ' || ch == '\t' || ch == '\n' }
@@ -78,6 +70,9 @@ func NewScanner(r io.Reader) *Scanner {
 // read reads the next rune from the bufferred reader.
 // Returns the rune(0) if an error occurs (or io.EOF is returned).
 func (s *Scanner) read() rune {
+	if s.lineNum == 0 {
+		s.lineNum = 1
+	}
 	ch, _, err := s.r.ReadRune()
 	if err != nil {
 		if !s.reachedEOF {
@@ -152,10 +147,9 @@ func (s *Scanner) Scan() Token {
 
 func (s *Scanner) buildToken(typ TokenType, ch string) Token {
 	return Token{
-		typ:     typ,
-		ident:   ch,
-		lineNum: s.lineNum,
-		colNum:  s.colNum,
+		typ:   typ,
+		ident: ch,
+		pos:   Position{s.lineNum, s.colNum},
 	}
 }
 

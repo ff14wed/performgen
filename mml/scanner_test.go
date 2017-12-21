@@ -32,13 +32,11 @@ var _ = Describe("Scanner", func() {
 				token := scanner.Scan()
 				Expect(token.Type()).To(Equal(mml.TNote))
 				Expect(token.Ident()).To(Equal(t))
-				Expect(token.LineNum()).To(Equal(1))
-				Expect(token.ColNum()).To(Equal(i + 1))
+				Expect(token.Position()).To(Equal(mml.Position{Line: 1, Column: i + 1}))
 			}
 			token := scanner.Scan()
 			Expect(token.Type()).To(Equal(mml.TEOF))
-			Expect(token.LineNum()).To(Equal(1))
-			Expect(token.ColNum()).To(Equal(15))
+			Expect(token.Position()).To(Equal(mml.Position{Line: 1, Column: 15}))
 		})
 	})
 	Context("with whitespaces interspersed between notes", func() {
@@ -58,8 +56,7 @@ var _ = Describe("Scanner", func() {
 				token := scanner.Scan()
 				Expect(token.Type()).To(Equal(tok.typ))
 				Expect(token.Ident()).To(Equal(tok.ident))
-				Expect(token.LineNum()).To(Equal(tok.lineNum))
-				Expect(token.ColNum()).To(Equal(tok.colNum))
+				Expect(token.Position()).To(Equal(mml.Position{Line: tok.lineNum, Column: tok.colNum}))
 			}
 		})
 	})
@@ -95,8 +92,7 @@ var _ = Describe("Scanner", func() {
 				token := scanner.Scan()
 				Expect(token.Type()).To(Equal(tok.typ))
 				Expect(token.Ident()).To(Equal(tok.ident))
-				Expect(token.LineNum()).To(Equal(tok.lineNum))
-				Expect(token.ColNum()).To(Equal(tok.colNum))
+				Expect(token.Position()).To(Equal(mml.Position{Line: tok.lineNum, Column: tok.colNum}))
 			}
 		})
 	})
@@ -118,8 +114,7 @@ var _ = Describe("Scanner", func() {
 				token := scanner.Scan()
 				Expect(token.Type()).To(BeAssignableToTypeOf(tok.typ))
 				Expect(token.Ident()).To(Equal(tok.ident))
-				Expect(token.LineNum()).To(Equal(tok.lineNum))
-				Expect(token.ColNum()).To(Equal(tok.colNum))
+				Expect(token.Position()).To(Equal(mml.Position{Line: tok.lineNum, Column: tok.colNum}))
 			}
 		})
 	})

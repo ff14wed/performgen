@@ -19,6 +19,16 @@ type Command interface {
 	Execute(e Executor) error
 }
 
+// Position identifies a location of the input string
+type Position struct {
+	Line   int
+	Column int
+}
+
+func (p Position) String() string {
+	return fmt.Sprintf("line %d, column %d", p.Line, p.Column)
+}
+
 // Parser represents a parser.
 type Parser struct {
 	s *Scanner
@@ -36,7 +46,7 @@ func NewParser(r io.Reader) *Parser {
 func (p *Parser) scan() error {
 	p.tok = p.s.Scan()
 	if p.tok.Type() == TIllegal {
-		return fmt.Errorf("invalid token '%s' at line %d col %d", p.tok.Ident(), p.tok.LineNum(), p.tok.ColNum())
+		return fmt.Errorf("invalid token '%s' at %s", p.tok.Ident(), p.tok.Position())
 	}
 	return nil
 }
@@ -127,7 +137,7 @@ func (p *Parser) parseTempoCommand(cmdTok Token) (Command, error) {
 		}
 		return &TempoCommand{Tempo: tempo}, nil
 	}
-	return nil, fmt.Errorf("Tempo command at line %d col %d: expected numeric argument", cmdTok.LineNum(), cmdTok.ColNum())
+	return nil, fmt.Errorf("Tempo command at %s: expected numeric argument", cmdTok.Position())
 }
 
 func (p *Parser) parseLengthCommand(cmdTok Token) (Command, error) {
@@ -148,7 +158,7 @@ func (p *Parser) parseLengthCommand(cmdTok Token) (Command, error) {
 		dot = true
 	}
 	if length == -1 {
-		return nil, fmt.Errorf("Length command at line %d col %d: expected numeric argument", cmdTok.LineNum(), cmdTok.ColNum())
+		return nil, fmt.Errorf("Length command at %s: expected numeric argument", cmdTok.Position())
 	}
 	return &LengthCommand{Length: length, Dot: dot}, nil
 }
@@ -159,7 +169,7 @@ func (p *Parser) parseOctaveCommand(cmdTok Token) (Command, error) {
 		}
 		return &OctaveCommand{Octave: octave}, nil
 	}
-	return nil, fmt.Errorf("Octave command at line %d col %d: expected numeric argument", cmdTok.LineNum(), cmdTok.ColNum())
+	return nil, fmt.Errorf("Octave command at %s: expected numeric argument", cmdTok.Position())
 }
 
 func (p *Parser) parseOctaveUpCommand(cmdTok Token) (Command, error) {
@@ -194,7 +204,7 @@ func (p *Parser) parseCommand() (Command, error) {
 	case TEOF:
 		return nil, nil
 	default:
-		return nil, fmt.Errorf("expected command, got '%s' at line %d col %d", cmdTok.Ident(), cmdTok.LineNum(), cmdTok.ColNum())
+		return nil, fmt.Errorf("expected command, got '%s' at %s", cmdTok.Ident(), cmdTok.Position())
 	}
 }
 func (p *Parser) parseSequence() (*AST, error) {

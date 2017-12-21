@@ -26,7 +26,7 @@ var _ = Describe("Perform Generator", func() {
 	})
 	It("errors when invalid symbol is encountered", func() {
 		_, err := performgen.Generate(" HABCD")
-		Expect(err).To(MatchError("invalid token 'H' at line 1 col 2"))
+		Expect(err).To(MatchError("invalid token 'H' at line 1, column 2"))
 	})
 	It("errors when a runtime error has occurred", func() {
 		_, err := performgen.Generate(" ABCDo7")
