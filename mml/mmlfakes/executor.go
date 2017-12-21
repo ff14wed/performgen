@@ -8,12 +8,13 @@ import (
 )
 
 type Executor struct {
-	EmitNoteStub        func(note string, modifier string, length int) error
+	EmitNoteStub        func(note string, modifier string, length int, dot bool) error
 	emitNoteMutex       sync.RWMutex
 	emitNoteArgsForCall []struct {
 		note     string
 		modifier string
 		length   int
+		dot      bool
 	}
 	emitNoteReturns struct {
 		result1 error
@@ -21,10 +22,11 @@ type Executor struct {
 	emitNoteReturnsOnCall map[int]struct {
 		result1 error
 	}
-	EmitRestStub        func(length int) error
+	EmitRestStub        func(length int, dot bool) error
 	emitRestMutex       sync.RWMutex
 	emitRestArgsForCall []struct {
 		length int
+		dot    bool
 	}
 	emitRestReturns struct {
 		result1 error
@@ -43,10 +45,11 @@ type Executor struct {
 	setTempoReturnsOnCall map[int]struct {
 		result1 error
 	}
-	SetDefaultLengthStub        func(l int) error
+	SetDefaultLengthStub        func(l int, dot bool) error
 	setDefaultLengthMutex       sync.RWMutex
 	setDefaultLengthArgsForCall []struct {
-		l int
+		l   int
+		dot bool
 	}
 	setDefaultLengthReturns struct {
 		result1 error
@@ -78,18 +81,19 @@ type Executor struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *Executor) EmitNote(note string, modifier string, length int) error {
+func (fake *Executor) EmitNote(note string, modifier string, length int, dot bool) error {
 	fake.emitNoteMutex.Lock()
 	ret, specificReturn := fake.emitNoteReturnsOnCall[len(fake.emitNoteArgsForCall)]
 	fake.emitNoteArgsForCall = append(fake.emitNoteArgsForCall, struct {
 		note     string
 		modifier string
 		length   int
-	}{note, modifier, length})
-	fake.recordInvocation("EmitNote", []interface{}{note, modifier, length})
+		dot      bool
+	}{note, modifier, length, dot})
+	fake.recordInvocation("EmitNote", []interface{}{note, modifier, length, dot})
 	fake.emitNoteMutex.Unlock()
 	if fake.EmitNoteStub != nil {
-		return fake.EmitNoteStub(note, modifier, length)
+		return fake.EmitNoteStub(note, modifier, length, dot)
 	}
 	if specificReturn {
 		return ret.result1
@@ -103,10 +107,10 @@ func (fake *Executor) EmitNoteCallCount() int {
 	return len(fake.emitNoteArgsForCall)
 }
 
-func (fake *Executor) EmitNoteArgsForCall(i int) (string, string, int) {
+func (fake *Executor) EmitNoteArgsForCall(i int) (string, string, int, bool) {
 	fake.emitNoteMutex.RLock()
 	defer fake.emitNoteMutex.RUnlock()
-	return fake.emitNoteArgsForCall[i].note, fake.emitNoteArgsForCall[i].modifier, fake.emitNoteArgsForCall[i].length
+	return fake.emitNoteArgsForCall[i].note, fake.emitNoteArgsForCall[i].modifier, fake.emitNoteArgsForCall[i].length, fake.emitNoteArgsForCall[i].dot
 }
 
 func (fake *Executor) EmitNoteReturns(result1 error) {
@@ -128,16 +132,17 @@ func (fake *Executor) EmitNoteReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *Executor) EmitRest(length int) error {
+func (fake *Executor) EmitRest(length int, dot bool) error {
 	fake.emitRestMutex.Lock()
 	ret, specificReturn := fake.emitRestReturnsOnCall[len(fake.emitRestArgsForCall)]
 	fake.emitRestArgsForCall = append(fake.emitRestArgsForCall, struct {
 		length int
-	}{length})
-	fake.recordInvocation("EmitRest", []interface{}{length})
+		dot    bool
+	}{length, dot})
+	fake.recordInvocation("EmitRest", []interface{}{length, dot})
 	fake.emitRestMutex.Unlock()
 	if fake.EmitRestStub != nil {
-		return fake.EmitRestStub(length)
+		return fake.EmitRestStub(length, dot)
 	}
 	if specificReturn {
 		return ret.result1
@@ -151,10 +156,10 @@ func (fake *Executor) EmitRestCallCount() int {
 	return len(fake.emitRestArgsForCall)
 }
 
-func (fake *Executor) EmitRestArgsForCall(i int) int {
+func (fake *Executor) EmitRestArgsForCall(i int) (int, bool) {
 	fake.emitRestMutex.RLock()
 	defer fake.emitRestMutex.RUnlock()
-	return fake.emitRestArgsForCall[i].length
+	return fake.emitRestArgsForCall[i].length, fake.emitRestArgsForCall[i].dot
 }
 
 func (fake *Executor) EmitRestReturns(result1 error) {
@@ -224,16 +229,17 @@ func (fake *Executor) SetTempoReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *Executor) SetDefaultLength(l int) error {
+func (fake *Executor) SetDefaultLength(l int, dot bool) error {
 	fake.setDefaultLengthMutex.Lock()
 	ret, specificReturn := fake.setDefaultLengthReturnsOnCall[len(fake.setDefaultLengthArgsForCall)]
 	fake.setDefaultLengthArgsForCall = append(fake.setDefaultLengthArgsForCall, struct {
-		l int
-	}{l})
-	fake.recordInvocation("SetDefaultLength", []interface{}{l})
+		l   int
+		dot bool
+	}{l, dot})
+	fake.recordInvocation("SetDefaultLength", []interface{}{l, dot})
 	fake.setDefaultLengthMutex.Unlock()
 	if fake.SetDefaultLengthStub != nil {
-		return fake.SetDefaultLengthStub(l)
+		return fake.SetDefaultLengthStub(l, dot)
 	}
 	if specificReturn {
 		return ret.result1
@@ -247,10 +253,10 @@ func (fake *Executor) SetDefaultLengthCallCount() int {
 	return len(fake.setDefaultLengthArgsForCall)
 }
 
-func (fake *Executor) SetDefaultLengthArgsForCall(i int) int {
+func (fake *Executor) SetDefaultLengthArgsForCall(i int) (int, bool) {
 	fake.setDefaultLengthMutex.RLock()
 	defer fake.setDefaultLengthMutex.RUnlock()
-	return fake.setDefaultLengthArgsForCall[i].l
+	return fake.setDefaultLengthArgsForCall[i].l, fake.setDefaultLengthArgsForCall[i].dot
 }
 
 func (fake *Executor) SetDefaultLengthReturns(result1 error) {

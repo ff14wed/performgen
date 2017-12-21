@@ -12,11 +12,11 @@ import (
 
 // Executor is an interface on which state changes can be executed
 type Executor interface {
-	EmitNote(note string, modifier string, length int) error
-	EmitRest(length int) error
+	EmitNote(note string, modifier string, length int, dot bool) error
+	EmitRest(length int, dot bool) error
 
 	SetTempo(t int) error
-	SetDefaultLength(l int) error
+	SetDefaultLength(l int, dot bool) error
 	SetOctave(o int) error
 	CurrentOctave() int
 }
@@ -28,6 +28,8 @@ type State struct {
 	Tempo    int
 	Length   int
 	Octave   int
+
+	dottedLength bool
 }
 
 var _ Executor = new(State)
@@ -52,7 +54,7 @@ var noteMappings = map[string]int{
 // If length is 0 (explicit length code of 0), the length will be set to a
 // very small value (20 milliseconds).
 // If an octave was not specified previously, it will default to octave 3
-func (s *State) EmitNote(note string, modifier string, length int) error {
+func (s *State) EmitNote(note string, modifier string, length int, dot bool) error {
 	shift := (s.CurrentOctave() - 2) * 12
 	noteMap, ok := noteMappings[strings.ToUpper(note)]
 	if !ok {
@@ -68,16 +70,27 @@ func (s *State) EmitNote(note string, modifier string, length int) error {
 		return fmt.Errorf("invalid note: %s%s at octave %d", note, modifier, s.CurrentOctave())
 	}
 	s.Sequence = append(s.Sequence, encoding.Note(pos))
-	return s.EmitRest(length)
+	return s.EmitRest(length, dot)
 }
 
 // EmitRest emits a rest note to the sequence. The length is the same as
 // the length defined by EmitNote.
-func (s *State) EmitRest(length int) error {
+func (s *State) EmitRest(length int, dot bool) error {
 	ml, err := s.lengthInMs(length)
 	if err != nil {
 		return err
 	}
+	if length == -1 && s.dottedLength {
+		ml = ml + ml/2
+	}
+	if dot {
+		ml = ml + ml/2
+	}
+	s.emitDelay(ml)
+	return nil
+}
+
+func (s *State) emitDelay(ml uint16) {
 	for ml > 0 {
 		if ml >= 250 {
 			s.Sequence = append(s.Sequence, encoding.Delay(250))
@@ -87,7 +100,6 @@ func (s *State) EmitRest(length int) error {
 			ml = 0
 		}
 	}
-	return nil
 }
 
 // SetTempo sets the tempo (in BPM) on the state. If the Tempo is not set,
@@ -104,7 +116,7 @@ func (s *State) SetTempo(t int) error {
 
 // SetDefaultLength sets the default length on the state. If the default length
 // is not set, then it is assumed the length is 1/4th of a beat.
-func (s *State) SetDefaultLength(l int) error {
+func (s *State) SetDefaultLength(l int, dot bool) error {
 	switch {
 	case l < 0:
 		return errors.New("cannot set default length to less than 0")
@@ -114,6 +126,7 @@ func (s *State) SetDefaultLength(l int) error {
 		return errors.New("cannot set default length to greater than 64")
 	}
 	s.Length = l
+	s.dottedLength = dot
 	return nil
 }
 

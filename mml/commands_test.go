@@ -23,15 +23,17 @@ var _ = Describe("Commands", func() {
 				Note:     "A",
 				Modifier: "#",
 				Length:   64,
+				Dot:      true,
 			}
 		})
 		It("emits a note on the state", func() {
 			Expect(c.Execute(fakeExecutor)).To(Succeed())
 			Expect(fakeExecutor.EmitNoteCallCount()).To(Equal(1))
-			note, modifier, length := fakeExecutor.EmitNoteArgsForCall(0)
+			note, modifier, length, dot := fakeExecutor.EmitNoteArgsForCall(0)
 			Expect(note).To(Equal("A"))
 			Expect(modifier).To(Equal("#"))
 			Expect(length).To(Equal(64))
+			Expect(dot).To(BeTrue())
 		})
 		Context("when the state emits an error", func() {
 			BeforeEach(func() {
@@ -47,13 +49,15 @@ var _ = Describe("Commands", func() {
 		BeforeEach(func() {
 			c = &mml.RestCommand{
 				Length: 64,
+				Dot:    true,
 			}
 		})
 		It("emits a rest on the state", func() {
 			Expect(c.Execute(fakeExecutor)).To(Succeed())
 			Expect(fakeExecutor.EmitRestCallCount()).To(Equal(1))
-			length := fakeExecutor.EmitRestArgsForCall(0)
+			length, dot := fakeExecutor.EmitRestArgsForCall(0)
 			Expect(length).To(Equal(64))
+			Expect(dot).To(BeTrue())
 		})
 		Context("when the state emits an error", func() {
 			BeforeEach(func() {
@@ -91,13 +95,15 @@ var _ = Describe("Commands", func() {
 		BeforeEach(func() {
 			c = &mml.LengthCommand{
 				Length: 1,
+				Dot:    true,
 			}
 		})
 		It("sets the default length on the state", func() {
 			Expect(c.Execute(fakeExecutor)).To(Succeed())
 			Expect(fakeExecutor.SetDefaultLengthCallCount()).To(Equal(1))
-			length := fakeExecutor.SetDefaultLengthArgsForCall(0)
+			length, dot := fakeExecutor.SetDefaultLengthArgsForCall(0)
 			Expect(length).To(Equal(1))
+			Expect(dot).To(BeTrue())
 		})
 		Context("when the state emits an error", func() {
 			BeforeEach(func() {

@@ -10,7 +10,7 @@ import (
 
 var _ = Describe("Perform Generator", func() {
 	It("generates correct perform data blocks from the MML", func() {
-		data, err := performgen.Generate("t88 b2al2b+")
+		data, err := performgen.Generate("t88 b2al2b+.")
 		Expect(err).ToNot(HaveOccurred())
 		Expect(data).To(Equal([]*encoding.Perform{
 			{
@@ -18,8 +18,8 @@ var _ = Describe("Perform Generator", func() {
 				Data:   [30]byte{24, 255, 250, 255, 250, 255, 250, 255, 250, 255, 250, 255, 113, 22, 255, 250, 255, 250, 255, 181, 25, 255, 250, 255, 250, 255, 250, 255, 250},
 			},
 			{
-				Length: 4,
-				Data:   [30]byte{255, 250, 255, 113},
+				Length: 10,
+				Data:   [30]byte{255, 250, 255, 250, 255, 250, 255, 250, 255, 44},
 				U1:     0,
 			},
 		}))

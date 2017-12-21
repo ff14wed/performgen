@@ -14,7 +14,7 @@ var _ = Describe("Parser", func() {
 	var input *bytes.Reader
 	Context("with a valid program", func() {
 		BeforeEach(func() {
-			input = bytes.NewReader([]byte("T120 L4 O0 > < Aa1 B# B3 C#4 C+4 C-4 D0d0 Rr5"))
+			input = bytes.NewReader([]byte("T120 L4 O0 > < Aa1 B# B3 C#4 C+4 C-4 D0d0 R E5. r5. L4."))
 		})
 		It("generates a correct syntax tree and notes have -1 as default length", func() {
 			parser := mml.NewParser(input)
@@ -36,7 +36,9 @@ var _ = Describe("Parser", func() {
 				&mml.NoteCommand{Note: "D", Length: 0},
 				&mml.NoteCommand{Note: "d", Length: 0},
 				&mml.RestCommand{Length: -1},
-				&mml.RestCommand{Length: 5},
+				&mml.NoteCommand{Note: "E", Length: 5, Dot: true},
+				&mml.RestCommand{Length: 5, Dot: true},
+				&mml.LengthCommand{Length: 4, Dot: true},
 			}))
 		})
 	})
@@ -98,6 +100,46 @@ var _ = Describe("Parser", func() {
 			parser := mml.NewParser(input)
 			_, err := parser.Parse()
 			Expect(err).To(MatchError("invalid token 'H' at line 1 col 10"))
+		})
+	})
+	Context("when there is an unrecognized token after a note length", func() {
+		BeforeEach(func() {
+			input = bytes.NewReader([]byte("    AaBb+3HCcDd"))
+		})
+		It("errors", func() {
+			parser := mml.NewParser(input)
+			_, err := parser.Parse()
+			Expect(err).To(MatchError("invalid token 'H' at line 1 col 11"))
+		})
+	})
+	Context("when there is an unrecognized token after a note dot", func() {
+		BeforeEach(func() {
+			input = bytes.NewReader([]byte("    AaBb+3.HCcDd"))
+		})
+		It("errors", func() {
+			parser := mml.NewParser(input)
+			_, err := parser.Parse()
+			Expect(err).To(MatchError("invalid token 'H' at line 1 col 12"))
+		})
+	})
+	Context("when there is an unrecognized token after a rest dot", func() {
+		BeforeEach(func() {
+			input = bytes.NewReader([]byte("    AaBr.HCcDd"))
+		})
+		It("errors", func() {
+			parser := mml.NewParser(input)
+			_, err := parser.Parse()
+			Expect(err).To(MatchError("invalid token 'H' at line 1 col 10"))
+		})
+	})
+	Context("when there is an unrecognized token after a length dot", func() {
+		BeforeEach(func() {
+			input = bytes.NewReader([]byte("    AaBL4.HCcDd"))
+		})
+		It("errors", func() {
+			parser := mml.NewParser(input)
+			_, err := parser.Parse()
+			Expect(err).To(MatchError("invalid token 'H' at line 1 col 11"))
 		})
 	})
 	Context("when there is a non-command token after a full command specificaiton", func() {

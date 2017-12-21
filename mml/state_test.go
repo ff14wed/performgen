@@ -17,7 +17,7 @@ var _ = Describe("State", func() {
 		DescribeTable("emits the correct note",
 			func(note, modifier string, octave, expectedID int) {
 				s.SetOctave(octave + 3)
-				s.EmitNote(note, modifier, 0)
+				s.EmitNote(note, modifier, 0, false)
 				Expect(s.Sequence).To(ConsistOf(encoding.Note(byte(expectedID)), encoding.Delay(20)))
 			},
 			Entry("C (-1)", "C", "", -1, 1),
@@ -91,28 +91,46 @@ var _ = Describe("State", func() {
 
 			Entry("C (+2)", "C", "", 2, 37),
 		)
+		Context("when dot is set", func() {
+			It("adds an extra rest with half the note's duration", func() {
+				Expect(s.EmitNote("A", "", 8, true)).To(Succeed())
+				Expect(s.Sequence).To(ConsistOf(
+					encoding.Note(22),
+					encoding.Delay(250),
+					encoding.Delay(125),
+				))
+				Expect(s.EmitNote("A", "", 8, false)).To(Succeed())
+				Expect(s.Sequence).To(ConsistOf(
+					encoding.Note(22),
+					encoding.Delay(250),
+					encoding.Delay(125),
+					encoding.Note(22),
+					encoding.Delay(250),
+				))
+			})
+		})
 		It("accepts lowercase notes", func() {
-			Expect(s.EmitNote("a", "", 0)).To(Succeed())
+			Expect(s.EmitNote("a", "", 0, false)).To(Succeed())
 			Expect(s.Sequence).To(ConsistOf(encoding.Note(22), encoding.Delay(20)))
 		})
 		It("errors if an invalid length is provided", func() {
-			Expect(s.EmitNote("C", "", -2)).To(MatchError("invalid length: -2"))
+			Expect(s.EmitNote("C", "", -2, false)).To(MatchError("invalid length: -2"))
 		})
 		It("errors if an invalid note is provided", func() {
-			Expect(s.EmitNote("H", "#", 1)).To(MatchError("invalid note: H#"))
+			Expect(s.EmitNote("H", "#", 1, false)).To(MatchError("invalid note: H#"))
 		})
 		It("errors if a given note is out of range", func() {
 			s.SetOctave(5)
-			Expect(s.EmitNote("D", "+", 1)).To(MatchError("invalid note: D+ at octave 5"))
+			Expect(s.EmitNote("D", "+", 1, false)).To(MatchError("invalid note: D+ at octave 5"))
 		})
 	})
 	Describe("EmitRest", func() {
 		It("emits a default (quarter note) rest at 120bpm", func() {
-			Expect(s.EmitRest(-1)).To(Succeed())
+			Expect(s.EmitRest(-1, false)).To(Succeed())
 			Expect(s.Sequence).To(ConsistOf(encoding.Delay(250), encoding.Delay(250)))
 		})
 		It("emits a half note rest at 120bpm", func() {
-			Expect(s.EmitRest(2)).To(Succeed())
+			Expect(s.EmitRest(2, false)).To(Succeed())
 			Expect(s.Sequence).To(ConsistOf(
 				encoding.Delay(250),
 				encoding.Delay(250),
@@ -120,15 +138,30 @@ var _ = Describe("State", func() {
 				encoding.Delay(250),
 			))
 		})
+		Context("when dot is set", func() {
+			It("adds an extra rest with half the note's duration", func() {
+				Expect(s.EmitRest(8, true)).To(Succeed())
+				Expect(s.Sequence).To(ConsistOf(
+					encoding.Delay(250),
+					encoding.Delay(125),
+				))
+				Expect(s.EmitRest(8, false)).To(Succeed())
+				Expect(s.Sequence).To(ConsistOf(
+					encoding.Delay(250),
+					encoding.Delay(125),
+					encoding.Delay(250),
+				))
+			})
+		})
 		It("errors if an invalid length is provided", func() {
-			Expect(s.EmitRest(-2)).To(MatchError("invalid length: -2"))
+			Expect(s.EmitRest(-2, false)).To(MatchError("invalid length: -2"))
 		})
 		Context("with the default tempo and a default length set", func() {
 			BeforeEach(func() {
-				s.SetDefaultLength(32)
+				s.SetDefaultLength(32, false)
 			})
 			It("emits a thirty-secondth note rest at 120bpm", func() {
-				Expect(s.EmitRest(-1)).To(Succeed())
+				Expect(s.EmitRest(-1, false)).To(Succeed())
 				Expect(s.Sequence).To(ConsistOf(encoding.Delay(62)))
 			})
 		})
@@ -137,7 +170,7 @@ var _ = Describe("State", func() {
 				s.SetTempo(60)
 			})
 			It("emits a half note rest at 60bpm", func() {
-				Expect(s.EmitRest(2)).To(Succeed())
+				Expect(s.EmitRest(2, false)).To(Succeed())
 				Expect(s.Sequence).To(ConsistOf(
 					encoding.Delay(250),
 					encoding.Delay(250),
@@ -169,20 +202,51 @@ var _ = Describe("State", func() {
 	})
 	Describe("SetDefaultLength", func() {
 		It("sets the default length on the state", func() {
-			Expect(s.SetDefaultLength(64)).To(Succeed())
+			Expect(s.SetDefaultLength(64, false)).To(Succeed())
 			Expect(s.Length).To(Equal(64))
 		})
 		It("errors if the default length is set to 0", func() {
-			Expect(s.SetDefaultLength(0)).To(MatchError("cannot set default length to 0"))
+			Expect(s.SetDefaultLength(0, false)).To(MatchError("cannot set default length to 0"))
 			Expect(s.Length).To(Equal(0))
 		})
 		It("errors if the default length is set to a negative number", func() {
-			Expect(s.SetDefaultLength(-1)).To(MatchError("cannot set default length to less than 0"))
+			Expect(s.SetDefaultLength(-1, false)).To(MatchError("cannot set default length to less than 0"))
 			Expect(s.Length).To(Equal(0))
 		})
 		It("errors if the default length is set to greater than 64", func() {
-			Expect(s.SetDefaultLength(65)).To(MatchError("cannot set default length to greater than 64"))
+			Expect(s.SetDefaultLength(65, false)).To(MatchError("cannot set default length to greater than 64"))
 			Expect(s.Length).To(Equal(0))
+		})
+		Context("when there is a dot attached to a default length", func() {
+			It("adds an extra delay after all notes and rests using default length until the next length command", func() {
+				Expect(s.SetDefaultLength(8, true)).To(Succeed())
+				Expect(s.EmitRest(-1, false)).To(Succeed())
+				Expect(s.EmitRest(-1, true)).To(Succeed())
+				Expect(s.EmitNote("A", "", -1, false)).To(Succeed())
+
+				Expect(s.EmitRest(8, false)).To(Succeed())
+				Expect(s.EmitNote("A", "", 8, false)).To(Succeed())
+
+				Expect(s.SetDefaultLength(8, false)).To(Succeed())
+				Expect(s.EmitRest(-1, false)).To(Succeed())
+				Expect(s.Sequence).To(ConsistOf(
+					encoding.Delay(250),
+					encoding.Delay(125),
+					encoding.Delay(250),
+					encoding.Delay(250),
+					encoding.Delay(62),
+					encoding.Note(22),
+					encoding.Delay(250),
+					encoding.Delay(125),
+
+					encoding.Delay(250),
+					encoding.Note(22),
+					encoding.Delay(250),
+
+					encoding.Delay(250),
+				))
+			})
+
 		})
 	})
 	Describe("SetOctave", func() {

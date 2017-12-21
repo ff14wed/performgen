@@ -65,7 +65,7 @@ var _ = Describe("Scanner", func() {
 	})
 	Context("with numerics, whitespace, and other tokens", func() {
 		BeforeEach(func() {
-			input = bytes.NewReader([]byte("r R+ tT#123 1\n456 lL- oO >< 2"))
+			input = bytes.NewReader([]byte("r R+ tT#123 1\n456 lL- oO . >< 2"))
 		})
 		It("scans with the correct line and column numbers", func() {
 			scanner := mml.NewScanner(input)
@@ -85,14 +85,15 @@ var _ = Describe("Scanner", func() {
 				testTok{typ: mml.TModifier, ident: "-", lineNum: 2, colNum: 7},
 				testTok{typ: mml.TOctave, ident: "o", lineNum: 2, colNum: 9},
 				testTok{typ: mml.TOctave, ident: "O", lineNum: 2, colNum: 10},
-				testTok{typ: mml.TOctaveUp, ident: ">", lineNum: 2, colNum: 12},
-				testTok{typ: mml.TOctaveDown, ident: "<", lineNum: 2, colNum: 13},
-				testTok{typ: mml.TNumeric, ident: "2", lineNum: 2, colNum: 15},
-				testTok{typ: mml.TEOF, ident: string(rune(0)), lineNum: 2, colNum: 16},
+				testTok{typ: mml.TDot, ident: ".", lineNum: 2, colNum: 12},
+				testTok{typ: mml.TOctaveUp, ident: ">", lineNum: 2, colNum: 14},
+				testTok{typ: mml.TOctaveDown, ident: "<", lineNum: 2, colNum: 15},
+				testTok{typ: mml.TNumeric, ident: "2", lineNum: 2, colNum: 17},
+				testTok{typ: mml.TEOF, ident: string(rune(0)), lineNum: 2, colNum: 18},
 			}
 			for _, tok := range expectedTokens {
 				token := scanner.Scan()
-				Expect(token.Type()).To(BeAssignableToTypeOf(tok.typ))
+				Expect(token.Type()).To(Equal(tok.typ))
 				Expect(token.Ident()).To(Equal(tok.ident))
 				Expect(token.LineNum()).To(Equal(tok.lineNum))
 				Expect(token.ColNum()).To(Equal(tok.colNum))

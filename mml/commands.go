@@ -5,21 +5,23 @@ type NoteCommand struct {
 	Note     string
 	Modifier string
 	Length   int
+	Dot      bool
 }
 
 // Execute emits a note on the state
 func (n *NoteCommand) Execute(e Executor) error {
-	return e.EmitNote(n.Note, n.Modifier, n.Length)
+	return e.EmitNote(n.Note, n.Modifier, n.Length, n.Dot)
 }
 
 // RestCommand emits a rest with a certain length
 type RestCommand struct {
 	Length int
+	Dot    bool
 }
 
 // Execute emits a rest on the state
 func (r *RestCommand) Execute(e Executor) error {
-	return e.EmitRest(r.Length)
+	return e.EmitRest(r.Length, r.Dot)
 }
 
 // TempoCommand sets the tempo
@@ -35,11 +37,12 @@ func (t *TempoCommand) Execute(e Executor) error {
 // LengthCommand sets the default length
 type LengthCommand struct {
 	Length int
+	Dot    bool
 }
 
 // Execute sets the default length on the state
 func (l *LengthCommand) Execute(e Executor) error {
-	return e.SetDefaultLength(l.Length)
+	return e.SetDefaultLength(l.Length, l.Dot)
 }
 
 // OctaveCommand sets the octave

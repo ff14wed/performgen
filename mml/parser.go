@@ -52,58 +52,76 @@ func (p *Parser) Parse() (*AST, error) {
 	return p.parseSequence()
 }
 
-func (p *Parser) parseNumeric() (int, error) {
-	n, err := strconv.ParseInt(p.tok.Ident(), 10, 64)
-	if err != nil {
-		return -1, err
+// parseToken returns true if the next token is the expected type and advances
+// the next token if true
+func (p *Parser) parseToken(typ TokenType) (bool, string, error) {
+	if p.tok.Type() == typ {
+		return true, p.tok.Ident(), p.scan()
 	}
-	err = p.scan()
-	return int(n), err
+	return false, "", nil
+}
+
+func (p *Parser) parseNumeric() (bool, int, error) {
+	found, ident, err := p.parseToken(TNumeric)
+	if found {
+		n, parseErr := strconv.ParseInt(ident, 10, 64)
+		if parseErr != nil {
+			return true, -1, parseErr
+		}
+		return found, int(n), err
+	}
+	return found, -1, err
 }
 
 func (p *Parser) parseNoteCommand(cmdTok Token) (Command, error) {
 	var (
 		modifier string
 		numeric  = -1
-		err      error
+		dot      bool
 	)
-	switch p.tok.Type() {
-	case TModifier:
-		modifier = p.tok.Ident()
-		err = p.scan()
+	if found, ident, err := p.parseToken(TModifier); found {
 		if err != nil {
 			return nil, err
 		}
-		if p.tok.Type() != TNumeric {
-			break
-		}
-		fallthrough
-	case TNumeric:
-		numeric, err = p.parseNumeric()
-		if err != nil {
-			return nil, err
-		}
+		modifier = ident
 	}
-	return &NoteCommand{Note: cmdTok.Ident(), Modifier: modifier, Length: numeric}, nil
+	if found, n, err := p.parseNumeric(); found {
+		if err != nil {
+			return nil, err
+		}
+		numeric = n
+	}
+	if found, _, err := p.parseToken(TDot); found {
+		if err != nil {
+			return nil, err
+		}
+		dot = true
+	}
+	return &NoteCommand{Note: cmdTok.Ident(), Modifier: modifier, Length: numeric, Dot: dot}, nil
 }
 
 func (p *Parser) parseRestCommand(cmdTok Token) (Command, error) {
 	var (
 		numeric = -1
-		err     error
+		dot     bool
 	)
-	if p.tok.Type() == TNumeric {
-		numeric, err = p.parseNumeric()
+	if found, n, err := p.parseNumeric(); found {
 		if err != nil {
 			return nil, err
 		}
+		numeric = n
 	}
-	return &RestCommand{Length: numeric}, nil
+	if found, _, err := p.parseToken(TDot); found {
+		if err != nil {
+			return nil, err
+		}
+		dot = true
+	}
+	return &RestCommand{Length: numeric, Dot: dot}, nil
 }
 
 func (p *Parser) parseTempoCommand(cmdTok Token) (Command, error) {
-	if p.tok.Type() == TNumeric {
-		tempo, err := p.parseNumeric()
+	if found, tempo, err := p.parseNumeric(); found {
 		if err != nil {
 			return nil, err
 		}
@@ -113,18 +131,29 @@ func (p *Parser) parseTempoCommand(cmdTok Token) (Command, error) {
 }
 
 func (p *Parser) parseLengthCommand(cmdTok Token) (Command, error) {
-	if p.tok.Type() == TNumeric {
-		length, err := p.parseNumeric()
+	var (
+		length = -1
+		dot    bool
+	)
+	if found, n, err := p.parseNumeric(); found {
 		if err != nil {
 			return nil, err
 		}
-		return &LengthCommand{Length: length}, nil
+		length = n
 	}
-	return nil, fmt.Errorf("Length command at line %d col %d: expected numeric argument", cmdTok.LineNum(), cmdTok.ColNum())
+	if found, _, err := p.parseToken(TDot); found {
+		if err != nil {
+			return nil, err
+		}
+		dot = true
+	}
+	if length == -1 {
+		return nil, fmt.Errorf("Length command at line %d col %d: expected numeric argument", cmdTok.LineNum(), cmdTok.ColNum())
+	}
+	return &LengthCommand{Length: length, Dot: dot}, nil
 }
 func (p *Parser) parseOctaveCommand(cmdTok Token) (Command, error) {
-	if p.tok.Type() == TNumeric {
-		octave, err := p.parseNumeric()
+	if found, octave, err := p.parseNumeric(); found {
 		if err != nil {
 			return nil, err
 		}

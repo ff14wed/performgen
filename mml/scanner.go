@@ -139,6 +139,8 @@ func (s *Scanner) Scan() Token {
 		return s.buildToken(TOctaveUp, string(ch))
 	case '<':
 		return s.buildToken(TOctaveDown, string(ch))
+	case '.':
+		return s.buildToken(TDot, string(ch))
 	default:
 		if (ch >= 'a' && ch <= 'g') || (ch >= 'A' && ch <= 'G') {
 			return s.buildToken(TNote, string(ch))
