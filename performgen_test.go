@@ -1,6 +1,8 @@
 package performgen_test
 
 import (
+	"time"
+
 	"github.com/ff14wed/performgen"
 	"github.com/ff14wed/performgen/encoding"
 
@@ -12,15 +14,21 @@ var _ = Describe("Perform Generator", func() {
 	It("generates correct perform data blocks from the MML", func() {
 		data, err := performgen.Generate("t88 b2al2b+.")
 		Expect(err).ToNot(HaveOccurred())
-		Expect(data).To(Equal([]*encoding.Perform{
+		Expect(data).To(Equal([]encoding.PerformSegment{
 			{
-				Length: 29,
-				Data:   [30]byte{24, 255, 250, 255, 250, 255, 250, 255, 250, 255, 250, 255, 113, 22, 255, 250, 255, 250, 255, 181, 25, 255, 250, 255, 250, 255, 250, 255, 250},
+				Block: &encoding.Perform{
+					Length: 29,
+					Data:   [30]byte{24, 255, 250, 255, 250, 255, 250, 255, 250, 255, 250, 255, 113, 22, 255, 250, 255, 250, 255, 181, 25, 255, 250, 255, 250, 255, 250, 255, 250},
+				},
+				Length: 3044 * time.Millisecond,
 			},
 			{
-				Length: 10,
-				Data:   [30]byte{255, 250, 255, 250, 255, 250, 255, 250, 255, 44},
-				U1:     0,
+				Block: &encoding.Perform{
+					Length: 10,
+					Data:   [30]byte{255, 250, 255, 250, 255, 250, 255, 250, 255, 44},
+					U1:     0,
+				},
+				Length: 1044 * time.Millisecond,
 			},
 		}))
 	})

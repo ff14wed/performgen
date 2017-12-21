@@ -9,7 +9,16 @@ import (
 )
 
 // Generate converts MML to a packet that can be injected
-func Generate(input string) ([]*encoding.Perform, error) {
+// It returns the sequence of blocks that conform with the FFXIV Network RPC
+// for performing a sequence of notes. These can be injected into the client
+// to perform an entire track of music.
+// The durations in these blocks are important because while multiple blocks
+// can be injected at once to produce a contiguous track of music, each
+// character has only a limited sized buffer for perform data that has yet
+// to be used. A user should make use of these durations to inject them
+// slowly into the client to prevent filling the buffer faster than data can be
+// consumed.
+func Generate(input string) ([]encoding.PerformSegment, error) {
 	r := bytes.NewReader([]byte(input))
 	parser := mml.NewParser(r)
 	ast, err := parser.Parse()
@@ -23,5 +32,5 @@ func Generate(input string) ([]*encoding.Perform, error) {
 			return nil, fmt.Errorf("execution error at %s: %s", ast.Positions[i], err)
 		}
 	}
-	return state.Sequence.Blocks(), nil
+	return state.Sequence.Segments(), nil
 }

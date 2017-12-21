@@ -1,6 +1,8 @@
 package encoding_test
 
 import (
+	"time"
+
 	"github.com/ff14wed/performgen/encoding"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -34,18 +36,24 @@ var _ = Describe("Encoding", func() {
 				encoding.Note(9), encoding.Delay(0x80),
 				encoding.Note(10), encoding.Delay(0x80),
 			}
-			Expect(s.Blocks()).To(Equal([]*encoding.Perform{
-				&encoding.Perform{
-					Length: 30,
-					Data: [30]byte{
-						1, 0xFF, 0x80, 2, 0xFF, 0x80, 3, 0xFF, 0x80, 4, 0xFF, 0x80, 5, 0xFF, 0x80,
-						0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-						6, 0xFF, 0x80, 7, 0xFF, 0x80, 8,
+			Expect(s.Segments()).To(Equal([]encoding.PerformSegment{
+				{
+					Block: &encoding.Perform{
+						Length: 30,
+						Data: [30]byte{
+							1, 0xFF, 0x80, 2, 0xFF, 0x80, 3, 0xFF, 0x80, 4, 0xFF, 0x80, 5, 0xFF, 0x80,
+							0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+							6, 0xFF, 0x80, 7, 0xFF, 0x80, 8,
+						},
 					},
+					Length: 1916 * time.Millisecond,
 				},
-				&encoding.Perform{
-					Length: 8,
-					Data:   [30]byte{0xFF, 0x80, 9, 0xFF, 0x80, 10, 0xFF, 0x80},
+				{
+					Block: &encoding.Perform{
+						Length: 8,
+						Data:   [30]byte{0xFF, 0x80, 9, 0xFF, 0x80, 10, 0xFF, 0x80},
+					},
+					Length: 384 * time.Millisecond,
 				},
 			}))
 		})
