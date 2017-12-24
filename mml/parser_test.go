@@ -64,6 +64,50 @@ var _ = Describe("Parser", func() {
 			}))
 		})
 	})
+	Describe("Extend Command", func() {
+		Context("with a note argument", func() {
+			BeforeEach(func() {
+				input = bytes.NewReader([]byte("    &c+8"))
+			})
+			It("translates to a RestCommand with the correct length", func() {
+				parser := mml.NewParser(input)
+				ast, err := parser.Parse()
+				Expect(err).ToNot(HaveOccurred())
+				Expect(ast.Sequence).To(Equal([]mml.Command{
+					&mml.RestCommand{Length: 8},
+				}))
+				Expect(ast.Positions).To(Equal([]mml.Position{
+					{Line: 1, Column: 5},
+				}))
+			})
+		})
+		Context("with a rest argument", func() {
+			BeforeEach(func() {
+				input = bytes.NewReader([]byte("    &r16"))
+			})
+			It("translates to a RestCommand with the correct length", func() {
+				parser := mml.NewParser(input)
+				ast, err := parser.Parse()
+				Expect(err).ToNot(HaveOccurred())
+				Expect(ast.Sequence).To(Equal([]mml.Command{
+					&mml.RestCommand{Length: 16},
+				}))
+				Expect(ast.Positions).To(Equal([]mml.Position{
+					{Line: 1, Column: 5},
+				}))
+			})
+		})
+		Context("with an invalid argument", func() {
+			BeforeEach(func() {
+				input = bytes.NewReader([]byte("    &v16"))
+			})
+			It("errors", func() {
+				parser := mml.NewParser(input)
+				_, err := parser.Parse()
+				Expect(err).To(MatchError("Extend command at line 1, column 5: expected note or rest command"))
+			})
+		})
+	})
 	DescribeTable("commands with required numeric arguments should error when not provided a numeric argument",
 		func(command, input string) {
 			reader := bytes.NewReader([]byte(input))
@@ -91,6 +135,10 @@ var _ = Describe("Parser", func() {
 		Entry("after a rest dot", "    AaBr.HCcDd", mml.Position{Line: 1, Column: 10}),
 		Entry("after a length dot", "    AaBL4.HCcDd", mml.Position{Line: 1, Column: 11}),
 		Entry("after a length dot", "    AaBL4.HCcDd", mml.Position{Line: 1, Column: 11}),
+		Entry("after an extended note", "    AaB&EHCcDd", mml.Position{Line: 1, Column: 10}),
+		Entry("after an extended note modifier", "    AaB&E+HCcDd", mml.Position{Line: 1, Column: 11}),
+		Entry("after an extended rest", "    AaB&RHCcDd", mml.Position{Line: 1, Column: 10}),
+		Entry("after an extended rest dot", "    AaB&r.HCcDd", mml.Position{Line: 1, Column: 11}),
 	)
 	Context("when there is a non-command token after a full command specificaiton", func() {
 		BeforeEach(func() {

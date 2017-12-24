@@ -62,7 +62,7 @@ var _ = Describe("Scanner", func() {
 	})
 	Context("with numerics, whitespace, and other tokens", func() {
 		BeforeEach(func() {
-			input = bytes.NewReader([]byte("r R+ tT#123 1\n456 lL- oO . >< 2 v V7"))
+			input = bytes.NewReader([]byte("r R+ tT#123 1\n456 lL- oO . >< 2 v V7 a&c8"))
 		})
 		It("scans with the correct line and column numbers", func() {
 			scanner := mml.NewScanner(input)
@@ -89,7 +89,11 @@ var _ = Describe("Scanner", func() {
 				testTok{typ: mml.TVolume, ident: "v", lineNum: 2, colNum: 19},
 				testTok{typ: mml.TVolume, ident: "V", lineNum: 2, colNum: 21},
 				testTok{typ: mml.TNumeric, ident: "7", lineNum: 2, colNum: 22},
-				testTok{typ: mml.TEOF, ident: string(rune(0)), lineNum: 2, colNum: 23},
+				testTok{typ: mml.TNote, ident: "a", lineNum: 2, colNum: 24},
+				testTok{typ: mml.TExtend, ident: "&", lineNum: 2, colNum: 25},
+				testTok{typ: mml.TNote, ident: "c", lineNum: 2, colNum: 26},
+				testTok{typ: mml.TNumeric, ident: "8", lineNum: 2, colNum: 27},
+				testTok{typ: mml.TEOF, ident: string(rune(0)), lineNum: 2, colNum: 28},
 			}
 			for _, tok := range expectedTokens {
 				token := scanner.Scan()

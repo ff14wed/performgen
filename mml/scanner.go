@@ -19,6 +19,7 @@ const (
 	TOctaveUp
 	TOctaveDown
 	TVolume
+	TExtend
 	TDot
 	TModifier
 	TNumeric
@@ -137,6 +138,8 @@ func (s *Scanner) Scan() Token {
 		return s.buildToken(TOctaveDown, string(ch))
 	case 'V', 'v':
 		return s.buildToken(TVolume, string(ch))
+	case '&':
+		return s.buildToken(TExtend, string(ch))
 	case '.':
 		return s.buildToken(TDot, string(ch))
 	default:
