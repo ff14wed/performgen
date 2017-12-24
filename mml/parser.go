@@ -181,6 +181,16 @@ func (p *Parser) parseOctaveDownCommand(cmdTok Token) (Command, error) {
 	return &OctaveDownCommand{}, nil
 }
 
+func (p *Parser) parseVolumeCommand(cmdTok Token) (Command, error) {
+	if found, _, err := p.parseNumeric(); found {
+		if err != nil {
+			return nil, err
+		}
+		return &NoOpCommand{}, nil
+	}
+	return nil, fmt.Errorf("Volume command at %s: expected numeric argument", cmdTok.Position())
+}
+
 func (p *Parser) parseCommand() (Command, error) {
 	cmdTok := p.tok
 	err := p.scan()
@@ -202,6 +212,8 @@ func (p *Parser) parseCommand() (Command, error) {
 		return p.parseOctaveUpCommand(cmdTok)
 	case TOctaveDown:
 		return p.parseOctaveDownCommand(cmdTok)
+	case TVolume:
+		return p.parseVolumeCommand(cmdTok)
 	case TEOF:
 		return nil, nil
 	default:

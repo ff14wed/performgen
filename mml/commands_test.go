@@ -178,4 +178,14 @@ var _ = Describe("Commands", func() {
 			})
 		})
 	})
+	Describe("NoOpCommand", func() {
+		var n *mml.NoOpCommand
+		BeforeEach(func() {
+			n = &mml.NoOpCommand{}
+		})
+		It("does nothing", func() {
+			Expect(n.Execute(fakeExecutor)).To(Succeed())
+			Expect(fakeExecutor.Invocations()).To(BeEmpty())
+		})
+	})
 })

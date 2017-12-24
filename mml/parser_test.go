@@ -14,7 +14,7 @@ var _ = Describe("Parser", func() {
 	var input *bytes.Reader
 	Context("with a valid program", func() {
 		BeforeEach(func() {
-			input = bytes.NewReader([]byte("T120 L4 O0 > < Aa1 B# B3 C#4 \n C+4 C-4 D0d0 R E5. r5. L4."))
+			input = bytes.NewReader([]byte("T120 L4 O0 > < Aa1 B# B3 C#4 \n C+4 C-4 D0d0 R E5. r5. L4. v127"))
 		})
 		It("generates a correct syntax tree and notes have -1 as default length", func() {
 			parser := mml.NewParser(input)
@@ -39,6 +39,7 @@ var _ = Describe("Parser", func() {
 				&mml.NoteCommand{Note: "E", Length: 5, Dot: true},
 				&mml.RestCommand{Length: 5, Dot: true},
 				&mml.LengthCommand{Length: 4, Dot: true},
+				&mml.NoOpCommand{},
 			}))
 			Expect(ast.Positions).To(Equal([]mml.Position{
 				{Line: 1, Column: 1},
@@ -59,109 +60,38 @@ var _ = Describe("Parser", func() {
 				{Line: 2, Column: 17},
 				{Line: 2, Column: 21},
 				{Line: 2, Column: 25},
+				{Line: 2, Column: 29},
 			}))
 		})
 	})
-	Context("when tempo command does not have a numeric argument", func() {
-		BeforeEach(func() {
-			input = bytes.NewReader([]byte("    T a"))
-		})
-		It("errors", func() {
-			parser := mml.NewParser(input)
+	DescribeTable("commands with required numeric arguments should error when not provided a numeric argument",
+		func(command, input string) {
+			reader := bytes.NewReader([]byte(input))
+			parser := mml.NewParser(reader)
 			_, err := parser.Parse()
-			Expect(err).To(MatchError("Tempo command at line 1, column 5: expected numeric argument"))
-		})
-	})
-	Context("when length command does not have a numeric argument", func() {
-		BeforeEach(func() {
-			input = bytes.NewReader([]byte("    L a"))
-		})
-		It("errors", func() {
-			parser := mml.NewParser(input)
+			Expect(err).To(MatchError(command + " command at line 1, column 5: expected numeric argument"))
+		},
+		Entry("Tempo Command", "Tempo", "    T a"),
+		Entry("Length Command", "Length", "    L a"),
+		Entry("Octave Command", "Octave", "    O a"),
+		Entry("Volume Command", "Volume", "    V a"),
+	)
+	DescribeTable("unrecognized tokens in various places should error",
+		func(input string, location mml.Position) {
+			reader := bytes.NewReader([]byte(input))
+			parser := mml.NewParser(reader)
 			_, err := parser.Parse()
-			Expect(err).To(MatchError("Length command at line 1, column 5: expected numeric argument"))
-		})
-	})
-	Context("when octave command does not have a numeric argument", func() {
-		BeforeEach(func() {
-			input = bytes.NewReader([]byte("    O a"))
-		})
-		It("errors", func() {
-			parser := mml.NewParser(input)
-			_, err := parser.Parse()
-			Expect(err).To(MatchError("Octave command at line 1, column 5: expected numeric argument"))
-		})
-	})
-	Context("when there is an unrecognized token at the beginning of the input", func() {
-		BeforeEach(func() {
-			input = bytes.NewReader([]byte("    HAaBbCcDd"))
-		})
-		It("errors", func() {
-			parser := mml.NewParser(input)
-			_, err := parser.Parse()
-			Expect(err).To(MatchError("invalid token 'H' at line 1, column 5"))
-		})
-	})
-	Context("when there is an unrecognized token in middle of the input", func() {
-		BeforeEach(func() {
-			input = bytes.NewReader([]byte("    AaBbHCcDd"))
-		})
-		It("errors", func() {
-			parser := mml.NewParser(input)
-			_, err := parser.Parse()
-			Expect(err).To(MatchError("invalid token 'H' at line 1, column 9"))
-		})
-	})
-	Context("when there is an unrecognized token after a note modifier", func() {
-		BeforeEach(func() {
-			input = bytes.NewReader([]byte("    AaBb+HCcDd"))
-		})
-		It("errors", func() {
-			parser := mml.NewParser(input)
-			_, err := parser.Parse()
-			Expect(err).To(MatchError("invalid token 'H' at line 1, column 10"))
-		})
-	})
-	Context("when there is an unrecognized token after a note length", func() {
-		BeforeEach(func() {
-			input = bytes.NewReader([]byte("    AaBb+3HCcDd"))
-		})
-		It("errors", func() {
-			parser := mml.NewParser(input)
-			_, err := parser.Parse()
-			Expect(err).To(MatchError("invalid token 'H' at line 1, column 11"))
-		})
-	})
-	Context("when there is an unrecognized token after a note dot", func() {
-		BeforeEach(func() {
-			input = bytes.NewReader([]byte("    AaBb+3.HCcDd"))
-		})
-		It("errors", func() {
-			parser := mml.NewParser(input)
-			_, err := parser.Parse()
-			Expect(err).To(MatchError("invalid token 'H' at line 1, column 12"))
-		})
-	})
-	Context("when there is an unrecognized token after a rest dot", func() {
-		BeforeEach(func() {
-			input = bytes.NewReader([]byte("    AaBr.HCcDd"))
-		})
-		It("errors", func() {
-			parser := mml.NewParser(input)
-			_, err := parser.Parse()
-			Expect(err).To(MatchError("invalid token 'H' at line 1, column 10"))
-		})
-	})
-	Context("when there is an unrecognized token after a length dot", func() {
-		BeforeEach(func() {
-			input = bytes.NewReader([]byte("    AaBL4.HCcDd"))
-		})
-		It("errors", func() {
-			parser := mml.NewParser(input)
-			_, err := parser.Parse()
-			Expect(err).To(MatchError("invalid token 'H' at line 1, column 11"))
-		})
-	})
+			Expect(err).To(MatchError("invalid token 'H' at " + location.String()))
+		},
+		Entry("at the beginning of the input", "    HAaBbCcDd", mml.Position{Line: 1, Column: 5}),
+		Entry("in the middle of the input", "    AaBbHCcDd", mml.Position{Line: 1, Column: 9}),
+		Entry("after a note modifier", "    AaBb+HCcDd", mml.Position{Line: 1, Column: 10}),
+		Entry("after a note length", "    AaBb+3HCcDd", mml.Position{Line: 1, Column: 11}),
+		Entry("after a note dot", "    AaBb+3.HCcDd", mml.Position{Line: 1, Column: 12}),
+		Entry("after a rest dot", "    AaBr.HCcDd", mml.Position{Line: 1, Column: 10}),
+		Entry("after a length dot", "    AaBL4.HCcDd", mml.Position{Line: 1, Column: 11}),
+		Entry("after a length dot", "    AaBL4.HCcDd", mml.Position{Line: 1, Column: 11}),
+	)
 	Context("when there is a non-command token after a full command specificaiton", func() {
 		BeforeEach(func() {
 			input = bytes.NewReader([]byte("    O4+"))
@@ -184,5 +114,6 @@ var _ = Describe("Parser", func() {
 		Entry("Tempo", "    T9223372036854775808"),
 		Entry("Length", "    L9223372036854775808"),
 		Entry("Octave", "    O9223372036854775808"),
+		Entry("Volume", "    V9223372036854775808"),
 	)
 })

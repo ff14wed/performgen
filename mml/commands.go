@@ -70,3 +70,11 @@ type OctaveDownCommand struct{}
 func (o *OctaveDownCommand) Execute(e Executor) error {
 	return e.SetOctave(e.CurrentOctave() - 1)
 }
+
+// NoOpCommand literally does nothing
+type NoOpCommand struct{}
+
+// Execute decrements the octave on the state
+func (n *NoOpCommand) Execute(e Executor) error {
+	return nil
+}
