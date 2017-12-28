@@ -49,7 +49,7 @@ func (t Token) Position() Position {
 	return t.pos
 }
 
-func isWhitespace(ch rune) bool { return ch == ' ' || ch == '\t' || ch == '\n' }
+func isWhitespace(ch rune) bool { return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' }
 
 func isNumeric(ch rune) bool { return (ch >= '0' && ch <= '9') }
 

@@ -1,25 +1,79 @@
-# FFXIV Performance Generator
+# Performgen - FFXIV Performance Generator
 
 This is a library that compiles scores written in Music Macro Language ("MML
 Codes" written for Mabinogi or Archeage) into the network packets for the
 "Perform" action in Final Fantasy 14.
 
+## But why?
+
+This library was mainly created to make it a lot simpler to compose scores that
+can be played in FFXIV. Currently, typing out notes in a format like
+`A (+0), Bb (-1), C# (+1)` is somewhat readable, but very verbose and there
+aren't really any tools out there to visualize scores in this format. Also,
+there's no standard way of specifying note length or tempo.
+
+MML is a lot more convenient since there exist thousands of scores out there
+in MML format, and you can use 3ML Editor to convert MIDI to MML as well as to
+visualize the song.
+
+See the [For developers](#for-developers) section for why the output format
+is network packets.
+
 ## Usage
 
-Currently, this is only used as a Golang library with no additional
-dependencies. Simply add `import "github.com/ff14wed/performgen"` and
-pass the MML string to the `perform.Generate()` call to receive byte data
-for an FFXIV performance, split into segments.
+Performgen receives the input string from Stdin and returns comma separated
+values with the first column being the 32 byte segments written as hexadecimal
+strings and the second column being the duration of the segment in milliseconds.
 
-These segments can be sent from a certain private server implementation or
-packet injected into the FFXIV client itself.
+### Example workflow
+
+1. Download `performgen.exe` from the
+   [GitHub releases page](https://github.com/ff14wed/performgen/releases).
+1. On Windows, save the following MML string to a file like `song.mml`:
+   ```
+   t80o3a2b2c2d2e2f2g2
+   ```
+1. Execute the following command in command prompt:
+   ```
+   type song.mml | performgen.exe > segments.csv
+   ```
+1. The contents of `segments.csv` should look like:
+   ```
+   data,duration(ms)
+   1d16ffbb15ffbb16ffbb18fffaff7d16ffbb18ffbb1bfffaff7d1affbb180000,1872
+   1dffbb16fffafffafffaffbb1ffffaff7d21fffaff7d22fffaff7d24fffa0000,2499
+   1eff7d0affbb09ffbb0affbb0cfffaff7d0afffaff7d0afffaff7d09ffbb0a00,1998
+   0cffbb0cfffaff7d0afffaff7d00000000000000000000000000000000000000,937
+   ```
+1. These segments can be sent from a private server implementation of FFXIV
+   or used with a FFXIV packet injector (there is no public one yet as far as
+   I know).
+
+### For developers
+
+Performgen can be used as a Golang library with no additional dependencies.
+Simply add `import "github.com/ff14wed/performgen"` and pass the MML string
+to the `perform.Generate()` call to receive byte data for an FFXIV performance,
+split into segments.
+
+The reason for the specific choice of output format is that the network
+protocol for the "Perform" action is actually way more powerful than the
+action itself. While using the "Perform" action manually generates about
+1-3 notes per packet, the protocol allows you to play up to 10 notes per
+packet with at minimum a few milliseconds of delay in between them. It also
+allows you to specify exact number of milliseconds of delay to achieve a very
+high degree of accuracy with note length and tempo.
 
 The network protocol format for a single segment of a performance is a
-32 byte block structured as defined [here](encoding/perform.go). When the
-FFXIV client receives a single segment from the server, it queues it for the
-performing character and reads the data from this queue as the notes play.
-If the client receives multiple segments at once, they will be read in order
-instead of overlapping.
+32 byte block structured as defined [here](encoding/perform.go). The data
+for a segment is simply a list of either perform note IDs (1 byte), or delays
+(2 bytes, first byte is `0xFF`, second byte is a number from 0-250 for number
+of milliseconds).
+
+When the FFXIV client receives a single segment from the server, it queues
+it for the performing character and reads the data from this queue as the notes
+play. If the client receives multiple segments at once, they will be read in
+order instead of overlapping.
 
 This is useful because instead of sending one note at a time with delay
 in between, you can send an entire section of music and it will be played
